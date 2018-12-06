@@ -24,16 +24,10 @@ def printFabric():
     for row in fabric:
         print (' '.join([str(element) for element in row]))
     print ()
-    
-    # for row in fabric:
-    #     for element in row:
-    #         print (element, end=" ")
-    #     print()
 
 def processClaims():
-    
     for claim in fileData:
-        # Extract data from claims (#3 @ 5,5: 2x2)
+        # Extract data (e.g. #    3    @     5   ,    5   :     2   x    2)
         match  = re.search('^#([\\d]+) @ ([\\d]+),([\\d]+): ([\\d]+)x([\\d]+)', claim)
         claim  = int(match.group(1))
         col    = int(match.group(2))
@@ -41,14 +35,11 @@ def processClaims():
         width  = int(match.group(4))
         height = int(match.group(5))
 
-        #print (claim, col, row, width, height)
-
         for i in range(col, col+width):
             for j in range(row, row+height):
                 fabric[i][j] += 1
 
 def assessFabric():
-    
     overlapInches = 0
     for rows in fabric:
         for element in rows:
