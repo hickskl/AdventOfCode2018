@@ -21,7 +21,6 @@ def setup():
     fileHandle.close()
 
 def printFabric():
-    print ()
     for row in fabric:
         print (' '.join([str(element) for element in row]))
     print ()
@@ -35,7 +34,7 @@ def processClaims():
     
     for claim in fileData:
         # Extract data from claims (#3 @ 5,5: 2x2)
-        match  = re.search('^#(\\d) @ (\\d),(\\d): (\\d)x(\\d)', claim)
+        match  = re.search('^#([\\d]+) @ ([\\d]+),([\\d]+): ([\\d]+)x([\\d]+)', claim)
         claim  = int(match.group(1))
         col    = int(match.group(2))
         row    = int(match.group(3))
@@ -50,6 +49,13 @@ def processClaims():
 
 def assessFabric():
     
+    overlapInches = 0
+    for rows in fabric:
+        for element in rows:
+            if element > 1:
+                overlapInches += 1
+
+    print ("Number of Overlapping Inches:", overlapInches)
 
 def runTest():
     global fabric
@@ -62,11 +68,9 @@ def runTest():
     processClaims()
     printFabric()
     assessFabric()
-    
-    print ("Number of Overlapping Inches:", overlapInches)
 
 def runActual():
-    global fabric, overlapInches
+    global fabric
     
     # Create fabric
     dimension = 1000
@@ -75,15 +79,6 @@ def runActual():
     processClaims()
     assessFabric()
 
-    print ("Number of Overlapping Inches:", overlapInches)
-
 setup()
-
 #runTest()   # Test data = input2.txt
 runActual()  # Test data = input.txt
-
-
-
-
-
-
