@@ -1,6 +1,5 @@
 import os
 import sys
-from collections import defaultdict
 
 def setup():
     global fileHandle, fileData
@@ -20,26 +19,26 @@ def setup():
         fileData.append(entry)
     fileHandle.close()
 
+def stringsDifferByOne(string1, string2):
+    global diffPosn
+    singleDiffFound = False
+
+    for i in range(len(string1)):
+        if string1[i] != string2[i]:
+            if singleDiffFound:
+                singleDiffFound = False
+                break
+            else:
+                singleDiffFound = True
+                diffPosn = i
+
+    return singleDiffFound
+
 setup()
 
-diffCount = 0
-
-for label in fileData:
-
-    for letter in label:
-        letterMap [letter] += 1
-
-    for key,val in letterMap.items():
-        if val == 2:
-            twoTupleCount += 1
-            break
-
-    for key,val in letterMap.items():
-        if val == 3:
-            threeTupleCount += 1
-            break
-
-    letterMap.clear()
-
-checksum = twoTupleCount * threeTupleCount
-print ("Checksum:", checksum)
+for i in range(len(fileData)):
+    for j in range (i, len(fileData)):
+        if stringsDifferByOne(fileData[i], fileData[j]):
+            checksum = fileData[i][:diffPosn] + fileData[i][diffPosn+1:]
+            print("Checksum:", checksum)
+            exit
