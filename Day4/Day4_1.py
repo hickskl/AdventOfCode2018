@@ -47,11 +47,12 @@ def buildSchedule():
         entries += 1
 
         # Extract data (e.g. [  1518-     11-05            00:55      ]  wakes up)
-        match  = re.search('^.[\\d]+-([\\d]+-[\\d]+) ([\\d]+):([\\d]+). (.*)$', entry)
-        date   = match.group(1)
-        hour   = int(match.group(2))
-        minute = int(match.group(3))
-        text   = match.group(4)
+        match  = re.search('^.[\\d]+-([\\d]+)-([\\d]+) ([\\d]+):([\\d]+). (.*)$', entry)
+        month  = int(match.group(1))
+        day    = int(match.group(2))
+        hour   = int(match.group(3))
+        minute = int(match.group(4))
+        text   = match.group(5)
         
         if text == "wakes up":
             for i in range(lastTimeChange, minute):
@@ -71,7 +72,12 @@ def buildSchedule():
              
             match = re.search('Guard #([\\d]+) begins shift', text)
             guard = int(match.group(1))
-            
+
+            # Shift the day by 1 if the shift starts before 00:00
+            if hour != 0:
+                day += 1 
+
+            date = "{0}-{1}".format(str(month).zfill(2), str(day).zfill(2))
             newShift = Shift(date, guard)
 
 def processShifts():
