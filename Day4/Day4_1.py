@@ -74,11 +74,6 @@ def buildSchedule():
             
             newShift = Shift(date, guard)
 
-            if hour != 0:
-                lastTimeChange = 0
-            else:
-                lastTimeChange = minute
-
 def processShifts():
     return
 
