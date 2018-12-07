@@ -7,7 +7,7 @@ class Shift:
     def __init__(self, day, guard):
         self.day = day
         self.guard = guard
-        self.onDuty = ['.'] * 60
+        self.onDuty = ['.'] * 60 # minutes
 
 def setup():
     global fileHandle, fileData
