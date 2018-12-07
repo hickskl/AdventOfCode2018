@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+from collections import defaultdict
 
 def setup():
     global fileHandle, fileData
@@ -37,23 +38,26 @@ def processClaims():
 
         for i in range(col, col+width):
             for j in range(row, row+height):
-                fabric[i][j] += 1
+                if fabric[i][j] != 0: 
+                    claimOverlaps.update({claim : True})
+                    claimOverlaps[fabric[i][j]] = True                    
+                else:
+                    fabric[i][j] = claim
+                    if claim not in claimOverlaps:
+                        claimOverlaps.update({claim : False})
 
 def assessFabric():
-    overlapInches = 0
-    for rows in fabric:
-        for element in rows:
-            if element > 1:
-                overlapInches += 1
-
-    print ("Number of Overlapping Inches:", overlapInches)
+    for (claim,overlap) in claimOverlaps.items():
+        if not overlap:            
+            print ("Claim without Overlap: %d" % claim)
 
 def runTest():
-    global fabric
+    global fabric, claimOverlaps
     
     # Create fabric
     dimension = 11
     fabric = [[0 for x in range(dimension)] for y in range(dimension)]
+    claimOverlaps = defaultdict(lambda : False)
 
     printFabric()
     processClaims()
@@ -61,15 +65,16 @@ def runTest():
     assessFabric()
 
 def runActual():
-    global fabric
+    global fabric, claimOverlaps
     
     # Create fabric
     dimension = 1000
     fabric = [[0 for x in range(dimension)] for y in range(dimension)]
-
+    claimOverlaps = defaultdict(lambda : False)
+    
     processClaims()
     assessFabric()
 
 setup()
-runTest()   # Test data = input2.txt
-#runActual()  # Test data = input.txt
+#runTest()   # Test data = input2.txt
+runActual()  # Test data = input.txt
