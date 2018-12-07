@@ -46,8 +46,8 @@ def buildSchedule():
     for entry in fileData:
         entries += 1
 
-        # Extract data (e.g. [  1518-     11-05            00:55]        wakes up)
-        match  = re.search('^[[\\d]+-([\\d]+-[\\d]+) ([\\d]+):([\\d]+)] (.*)$', entry)
+        # Extract data (e.g. [  1518-     11-05            00:55      ]  wakes up)
+        match  = re.search('^.[\\d]+-([\\d]+-[\\d]+) ([\\d]+):([\\d]+). (.*)$', entry)
         date   = match.group(1)
         hour   = int(match.group(2))
         minute = int(match.group(3))
@@ -81,7 +81,6 @@ def buildSchedule():
 
 def processShifts():
     return
-
 
 setup()
 fileData.sort()
