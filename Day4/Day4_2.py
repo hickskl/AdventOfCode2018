@@ -8,7 +8,6 @@ class Shift:
         self.guard = guard
         #self.onDuty = ['.'] * 60 # minutes
         self.onDuty = [0] * 60 # minutes
-        self.minutesAsleep = 0
 
 def setup():
     global fileHandle, fileData
@@ -30,13 +29,13 @@ def setup():
 
 def printSchedule():
     print ()
-    print ("Date   ID     Zzz  Minute")
-    print ("                   000000000011111111112222222222333333333344444444445555555555")
-    print ("                   012345678901234567890123456789012345678901234567890123456789")
+    print ("Date   ID     Minute")
+    print ("              000000000011111111112222222222333333333344444444445555555555")
+    print ("              012345678901234567890123456789012345678901234567890123456789")
     
     for Shift in schedule:
         onDuty = ''.join([str(minute) for minute in Shift.onDuty])
-        print ("{0}  #{1}  {2}   {3}".format(Shift.day, str(Shift.guard).zfill(4), str(Shift.minutesAsleep).zfill(2), onDuty))
+        print ("{0}  #{1}  {2}".format(Shift.day, str(Shift.guard).zfill(4), onDuty))
     print ()
 
 def buildSchedule():
@@ -60,7 +59,6 @@ def buildSchedule():
             for i in range(lastTimeChange, minute):
                 #newShift.onDuty[i] = 'z'
                 newShift.onDuty[i] = 1  # 0 awake, 1 asleep
-                newShift.minutesAsleep += 1
             
             # If we've reached the last shift
             if entries == len(fileData):
@@ -87,32 +85,30 @@ def buildSchedule():
 def processShifts():
     sleepiestGuard = 0
     sleepiestMinute = 0
+    sleepiestSum = 0
 
-    # Find the sleepiest guard
-    sleepPerGuard = {}
-    longestSlept = 0
+    sumOfGuardShifts = {} # { key=guard : value=sum of minutes in shift)
 
+    # Zip up each guard's shifts into one shift summary
     for Shift in schedule:
-        if Shift.guard not in sleepPerGuard:
-            sleepPerGuard.update({Shift.guard : Shift.minutesAsleep})
+        if Shift.guard not in sumOfGuardShifts:
+            sumOfGuardShifts.update({Shift.guard : Shift.onDuty})
         else:
-            sleepPerGuard[Shift.guard] += Shift.minutesAsleep
-    
-    for (guard,minutes) in sleepPerGuard.items():
-        if minutes > longestSlept: 
-            sleepiestGuard = guard
-            longestSlept = minutes
+            sumMinutes = [sum(x) for x in zip(Shift.onDuty, sumOfGuardShifts[Shift.guard])]
+            sumOfGuardShifts[Shift.guard] = sumMinutes
 
-    # Find the minute most asleep
-    guardShifts = []
+        #print (Shift.guard, ' '.join([str(minute) for minute in sumOfGuardShifts[Shift.guard]]))
 
-    for Shift in schedule:
-        if Shift.guard == sleepiestGuard:
-            guardShifts.append(Shift.onDuty) # Grab all of the guard's shifts
-    
-    sumMinutes = [sum(x) for x in zip(*guardShifts)] # Sum all of the shifts
-    sleepiestMinute = sumMinutes.index(max(sumMinutes)) # Find the index of the sleepiest minute
-    print ("Sleepiest Guard:", sleepiestGuard, "Sleepiest Minute:", sleepiestMinute)
+    # Parse through each minute to find which guard sleeps the most
+    # Keep track of the most-slept minute and guard number
+    for min in range (60):
+        for (guard,shift) in sumOfGuardShifts.items():
+            if shift[min] > sleepiestSum:
+                sleepiestGuard = guard
+                sleepiestSum = shift[min]
+                sleepiestMinute = min
+
+    print ("Guard", sleepiestGuard, "slept the more during minute", sleepiestMinute, "for {0} shifts.".format(sleepiestSum))
     print ("Checksum:", int(sleepiestGuard * sleepiestMinute))
 
 setup()
