@@ -19,28 +19,34 @@ def setup():
 
 def unitsReact(char1, char2):
     react = False
-    #print(char1,char2)
     if str(char1).lower() == str(char2).lower():
         if ( (str(char1).islower() and str(char2).isupper())
             or (str(char1).isupper() and str(char2).islower()) ):
            react = True
     return react
 
-setup()
+def processPolymer(letter):
+    for unit in polymer:
+        if unit.lower() == letter.lower():
+            continue
+        elif len(polymerStack) > 0 and unitsReact(polymerStack[-1], unit):
+            polymerStack.pop()
+        else:
+            polymerStack.append(unit)
 
-# Use a stack! Duh. Stack idea:
-# https://www.reddit.com/r/adventofcode/comments/a3bruo/2018_day_5_when_optimisation_goes_wrong/eb6lv13/
+    inertPolymer = ''.join([str(unit) for unit in polymerStack])
+    print (letter, "->", len(inertPolymer))
+
+    unitMap.update({letter : len(inertPolymer)})
+    polymerStack.clear()
+
+setup()
 
 unit = 0
 polymerStack = []
+unitMap = {}        # { letter : reacted polymer with letter removed }
 
-for unit in polymer:
-    #print(unit, polymer, polymerStack)
-    if len(polymerStack) > 0 and unitsReact(polymerStack[-1], unit):
-        polymerStack.pop()
-    else:
-        polymerStack.append(unit)
-    print (len(polymerStack))
+for letter in sorted(set(polymer.lower())): # "set" removes duplicates
+    processPolymer(letter)    
 
-inertPolymer = ''.join([str(unit) for unit in polymerStack])
-print(len(inertPolymer), inertPolymer)
+print ( "Smallest polymer: %d" % min(unitMap.values()) )
