@@ -51,64 +51,45 @@ def plotPoints():
 def manhattanDistance(posn1, posn2):
     return abs(posn1[0] - posn2[0]) + abs(posn1[1] - posn2[1])
 
-def areaIsFinite(area):
-    finite = True
-    
-    # An area is infinite if it has a point on the border of the grid.
-    for x in range(maxX):
-        if grid[0][x] == area or grid[maxY-1][x] == area:
-            finite = False
-    
-    for y in range(maxY):
-        if grid[y][0] == area or grid[y][maxX-1] == area:
-            finite = False
-    
-    return finite
-
-def calculateArea(label):
-    size = 0
-    for (x,y) in itertools.product(range(maxX), range(maxY)):
-        if grid[y][x] == label:
-            size += 1
-    return size
-
-def plotClosestLocations():
+def plotSafeRegion(safeRegionArea):
     x = 0
     y = 0
-    closestLocation = 0
+    inSafeRegion = 0
 
-    for (x,y) in itertools.product(range(maxX), range(maxY)):    # For each point in the grid
-        for (label,location) in enumerate(coordinates):          # For each input coord. pair
-            distance = manhattanDistance((x,y), location)
-            if label == 0:
-                closestLocation = distance      # Set a default location
-                grid[y][x] = label
-            elif distance == closestLocation:   # Tied with another location
-                grid[y][x] = '.'
-            elif distance < closestLocation:    # Current location is closer to (x,y)
-                closestLocation = distance
-                grid[y][x] = label
+    for (x,y) in itertools.product(range(maxX), range(maxY)):
+        totalDistance = 0
 
-def findLargestFiniteArea():
-    largestArea = 0
-    for (label,location) in enumerate(coordinates):
-        if areaIsFinite(label):
-            area = calculateArea(label)
-            if area > largestArea:
-                largestArea = area
-                print("Area", label, location, "->", area)
+        for location in coordinates:
+            totalDistance += manhattanDistance((x,y), location)
+        
+        if totalDistance < safeRegionArea:
+            inSafeRegion += 1 
+            grid[y][x] = 'S'  
 
-    print ("Largest Area:", largestArea)
+    return inSafeRegion
+
+def runTest():
+    safeRegionArea = 32
+
+    plotPoints()
+    printGrid()
+    print("Calculating safe region...")
+    safeCount = plotSafeRegion(safeRegionArea)
+    printGrid()
+    print("Size of Safe Region:", safeCount)
+
+def runActual():
+    safeRegionArea = 10000
+
+    plotPoints()
+    print("Calculating safe region...")
+    safeCount = plotSafeRegion(safeRegionArea)
+    print("Size of Safe Region:", safeCount)
 
 setup()
-
 global grid
 grid = [['.' for x in range(maxX)] for y in range(maxY)]
 
-plotPoints()
-#printGrid()
-print("Assigning grid points to locations...")
-plotClosestLocations()
-#printGrid()
-print("---Finite Areas---")
-findLargestFiniteArea()
+#runTest() # 16
+runActual() # 45176
+
