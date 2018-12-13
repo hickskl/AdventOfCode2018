@@ -113,15 +113,6 @@ def pushNextSteps(step):
     # Stack must remain sorted, unique and filled with executable steps only.
     instructionStack.sort(reverse=True)
 
-def printStats(step):
-    global instructionStack, backlog, remainingSteps, executedSteps
-
-    print ("Stack", instructionStack, "=>", step)
-    print ("Backlog", backlog)
-    print ("Remaining", remainingSteps)
-    print ("Order", executedSteps)
-    print ("=========================")
-
 setup()
 
 readInstructions()
@@ -131,24 +122,28 @@ lastStep = findLastStep(nextSteps)              # Last step won't have next step
 instructionStack = firstSteps                   # Preload the stack with the first steps
 backlog = [lastStep]                            # Preload the backlog with the last step
 executedSteps = []                              # Output
-# remainingSteps = [all steps]
 stepCount = len(remainingSteps)
+# remainingSteps = all steps
 
 print ("=========================")
 print ("Next", nextSteps)
 print ("Dependent", dependentSteps)
 print ("Starting Stack", instructionStack)
-print ("=========================")
 
 # Loop-invariant: only executable steps are in the stack. Non-executable are in the backlog.
 while len(remainingSteps) > 0:
+    print ("=========================")
     step = instructionStack.pop()
     markStepExecuted(step)
     reviewBacklog()
     pushNextSteps(step)
 
-    printStats(step)
+    print ("Stack", instructionStack, "=>", step)
+    print ("Backlog", backlog)
+    print ("Remaining", remainingSteps)
+    print ("Order", executedSteps)
 
+print ("=========================")
 if len(executedSteps) == stepCount:
     print ("Step Order:", ''.join([step for step in executedSteps]))
 else:
