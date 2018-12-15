@@ -2,6 +2,11 @@ import os
 import sys
 import re
 
+class Worker:
+    def __init__(self):
+        self.job = "."
+        self.timeRemaining = 0
+
 def setup():
     global fileHandle, fileData
 
@@ -30,9 +35,9 @@ def readInstructions():
     remainingSteps = []
 
     for entry in fileData:
-        match  = re.search('Step (\\w) must be finished before step (\\w) can begin.', entry)
-        pre  = match.group(1)
-        post = match.group(2)
+        match = re.search('Step (\\w) must be finished before step (\\w) can begin.', entry)
+        pre   = match.group(1)
+        post  = match.group(2)
 
         if pre not in nextSteps:
             nextSteps.update({ pre : [post] })
@@ -68,11 +73,11 @@ def findLastStep(list):
         if step not in list:
             return step         # Just one last step
 
-def markStepExecuted(step):
-    global executedSteps
+def markJobExecuted(worker):
+    global executedSteps, remainingSteps
 
-    remainingSteps.remove(step)
-    executedSteps.append(step)
+    remainingSteps.remove(worker.job)
+    executedSteps.append(worker.job)
 
 def readyToExecute(step):
     global dependentSteps, remainingSteps
@@ -113,6 +118,50 @@ def pushNextSteps(step):
     # Stack must remain sorted, unique and filled with executable steps only.
     instructionStack.sort(reverse=True)
 
+def printHeader(workerCount):
+    print ("=========================")
+    print ("Next", nextSteps)
+    print ("Dependent", dependentSteps)
+    print ("Starting Stack", instructionStack)
+    print ("=========================")
+
+    print ("Second  ", "   ".join(["Elf "+str(x+1) for x in range(workerCount)]), "  Done")
+
+def printStats(step):
+    global instructionStack, backlog, remainingSteps, executedSteps
+
+    print ("Stack", instructionStack, "=>", step)
+    print ("Backlog", backlog)
+    print ("Remaining", remainingSteps)
+    print ("Order", executedSteps)
+    print ("=========================")
+
+def printSecondSummary(timer):
+    global workerQueue, workerCount, executedSteps
+    print(" {0}     ".format(str(timer).zfill(4)), "       ".join([workerQueue[i].job for i in range(workerCount)]), "   ", "".join(executedSteps))
+
+def secondsPerStep(step):
+    return (ord(step) - 64) + 60 # -64 reduces the ASCII value to A=1, B=2, ...
+
+def isWorking(worker): 
+    if worker.job == ".":
+        return False
+    else: return True
+
+def assignNextJob(worker):
+    global instructionStack, workerQueue
+    index = workerQueue.index(worker)
+
+    if not isWorking(worker) and len(instructionStack) > 0:
+        workerQueue[index].job = instructionStack.pop()
+        workerQueue[index].timeRemaining = secondsPerStep(workerQueue[index].job)
+
+def assignInitialJobs():
+    global workerQueue
+
+    for worker in workerQueue:
+        assignNextJob(worker)
+
 setup()
 
 readInstructions()
@@ -122,29 +171,43 @@ lastStep = findLastStep(nextSteps)              # Last step won't have next step
 instructionStack = firstSteps                   # Preload the stack with the first steps
 backlog = [lastStep]                            # Preload the backlog with the last step
 executedSteps = []                              # Output
+# remainingSteps = [all steps]
 stepCount = len(remainingSteps)
-# remainingSteps = all steps
 
-print ("=========================")
-print ("Next", nextSteps)
-print ("Dependent", dependentSteps)
-print ("Starting Stack", instructionStack)
+workerCount = 5
+workerQueue = []
+timer = 0
+
+for i in range(workerCount):
+    workerQueue.append(Worker())
+
+printHeader(workerCount)
+assignInitialJobs()    # Assign the first jobs
 
 # Loop-invariant: only executable steps are in the stack. Non-executable are in the backlog.
+# Each cycle processes one second.
 while len(remainingSteps) > 0:
-    print ("=========================")
-    step = instructionStack.pop()
-    markStepExecuted(step)
-    reviewBacklog()
-    pushNextSteps(step)
 
-    print ("Stack", instructionStack, "=>", step)
-    print ("Backlog", backlog)
-    print ("Remaining", remainingSteps)
-    print ("Order", executedSteps)
+    # First process all steps finished last round.
+    for i in range(workerCount):
+            
+        # Process any steps finished last round and reset workers' jobs.
+        if isWorking(workerQueue[i]) and workerQueue[i].timeRemaining == 0:
+            markJobExecuted(workerQueue[i])
+            reviewBacklog()
+            pushNextSteps(workerQueue[i].job)
+            workerQueue[i].job = "."
+            #printStats(workerQueue[i].job)
 
-print ("=========================")
-if len(executedSteps) == stepCount:
-    print ("Step Order:", ''.join([step for step in executedSteps]))
+    # Next, give workers jobs starting from Worker 1.
+    for i in range (workerCount):
+        assignNextJob(workerQueue[i])
+        workerQueue[i].timeRemaining -= 1
+
+    printSecondSummary(timer)
+    timer += 1       
+
+if len(executedSteps) == stepCount: # 1099
+    print ("Step Order:", ''.join([step for step in executedSteps]), "// Time: {0} seconds".format(int(timer)-1) )
 else:
     print ("Error in executing steps.")
